@@ -4,4 +4,17 @@ version = "0.1.0"
 description = "A minimal pyproject.toml"
 authors = [ ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+  "keras",
+  "gudhi",
+]
+
+[dependency-groups]
+dev = [
+  "ipython",
+  "python-lsp-server",
+]
+
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"

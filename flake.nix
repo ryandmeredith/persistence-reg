@@ -20,13 +20,14 @@
           {
             devShells.default =
               let
+                project = pyproject-nix.lib.project.loadPyproject {
+                  projectRoot = ./.;
+                };
                 python = pkgs.python3;
-                dependencies = with python.pkgs; [
-                  ipython
-                  python-lsp-server
-                  keras
-                  gudhi
-                ];
+                dependencies = project.renderers.withPackages {
+                  inherit python;
+                  groups = [ "dev" ];
+                } python.pkgs;
                 tools = with pkgs; [
                   python
                   ruff
