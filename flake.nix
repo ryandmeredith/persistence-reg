@@ -31,7 +31,6 @@
                 tools = with pkgs; [
                   python
                   ruff
-                  ty
                 ];
               in
               pkgs.mkShell { packages = tools ++ dependencies; };

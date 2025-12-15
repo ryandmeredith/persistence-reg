@@ -13,6 +13,8 @@ dependencies = [
 dev = [
   "ipython",
   "python-lsp-server",
+  "jax",
+  "torch",
 ]
 
 [build-system]
