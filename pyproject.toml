@@ -15,6 +15,7 @@ dev = [
   "python-lsp-server",
   "jax",
   "torch",
+  "scikit-learn",
 ]
 
 [build-system]
