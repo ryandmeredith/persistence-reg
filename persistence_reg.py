@@ -1,16 +1,15 @@
-from math import inf
 from dataclasses import dataclass
+from math import inf
 
 from keras import Regularizer
 from keras.ops import (
+    append,
     argmin,
     array,
     cond,
     fori_loop,
     full,
     max,
-    nonzero,
-    scatter_update,
     shape,
     slice_update,
     where,
@@ -39,14 +38,14 @@ def _minimal_spanning_tree(weights, start_index=0):
         def input_node():
             potential_weights = weights[i, :]
             mask = (potential_weights < min_weights[m:]) & (~visited[m:])
-            return scatter_update(
-                min_weights, nonzero(mask).T + m, potential_weights[mask]
-            )
+            update = where(mask, potential_weights, min_weights[m:])
+            return append(min_weights[:m], update)
 
         def output_node():
             potential_weights = weights[:, i - m]
             mask = (potential_weights < min_weights[:m]) & (~visited[:m])
-            return scatter_update(min_weights, nonzero(mask).T, potential_weights[mask])
+            update = where(mask, potential_weights, min_weights[:m])
+            return append(update, min_weights[m:])
 
         new_min_weights = cond(i < m, input_node, output_node)
 
