@@ -1,37 +1,70 @@
-from gudhi.simplex_tree import SimplexTree
+from math import inf
+from dataclasses import dataclass
+
 from keras import Regularizer
-from keras.ops import convert_to_numpy, max, sqrt
-from numpy import arange, inf, mgrid, zeros
+from keras.ops import (
+    argmin,
+    array,
+    cond,
+    fori_loop,
+    full,
+    max,
+    nonzero,
+    scatter_update,
+    shape,
+    slice_update,
+    where,
+    zeros,
+)
 
 
+def _minimal_spanning_tree(weights, start_index=0):
+    m, n = shape(weights)
+    num_nodes = m + n
+
+    min_weights = full((num_nodes,), inf)
+    min_weights = slice_update(min_weights, (start_index,), (0,))
+    visited = zeros(num_nodes, dtype=bool)
+    total = array(0.0)
+
+    initial_state = min_weights, visited, total
+
+    def body(_, state):
+        min_weights, visited, total = state
+        i = argmin(where(visited, inf, min_weights))
+
+        new_total = total + min_weights[i]
+        new_visited = slice_update(visited, (i,), (True,))
+
+        def input_node():
+            potential_weights = weights[i, :]
+            mask = (potential_weights < min_weights[m:]) & (~visited[m:])
+            return scatter_update(
+                min_weights, array(nonzero(mask)).T + m, potential_weights[mask]
+            )
+
+        def output_node():
+            potential_weights = weights[:, i - m]
+            mask = (potential_weights < min_weights[:m]) & (~visited[:m])
+            return scatter_update(
+                min_weights, array(nonzero(mask)).T, potential_weights[mask]
+            )
+
+        new_min_weights = cond(i < m, input_node, output_node)
+
+        return new_min_weights, new_visited, new_total
+
+    _, _, total = fori_loop(0, num_nodes, body, initial_state)
+
+    return total
+
+
+@dataclass
 class NeuralPersistence(Regularizer):
-    def __init__(self, in_dim, out_dim):
-        self.in_nodes = in_dim
-        self.out_nodes = out_dim
-        self.total_nodes = in_dim + out_dim
-        self.simplex = SimplexTree()
-
-        self.simplex.insert_batch(
-            arange(self.total_nodes)[None, :],
-            zeros(self.total_nodes),
-        )
+    norm: int = 2
+    scale: float = 1.0
 
     def __call__(self, weights):
         absolute_weights = abs(weights)
-        normalized = 1 - absolute_weights / max(absolute_weights)
-        self.simplex.insert_batch(
-            mgrid[: self.in_nodes, self.in_nodes : self.total_nodes].reshape(2, -1),
-            convert_to_numpy(normalized).reshape(-1),
-        )
-        try:
-            self.simplex.compute_persistence()
-            pairs = self.simplex.persistence_pairs()
-        finally:
-            self.simplex.reset_filtration(inf, min_dim=1)
-        return sqrt(
-            sum(
-                normalized[min(edge), max(edge) - self.in_nodes] ** 2
-                for _, edge in pairs
-                if len(edge) == 2
-            )
-        )
+        normalized = (1 - absolute_weights / max(absolute_weights)) ** self.norm
+        return -self.scale * _minimal_spanning_tree(normalized) ** (1 / self.norm)

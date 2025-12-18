@@ -7,20 +7,12 @@ from persistence_reg import NeuralPersistence
 def build_model(num_layers, layer_width, batch_size=32, jit_compile="auto"):
     model = Sequential()
     model.add(Input(batch_shape=(batch_size, 2), dtype="float32"), rebuild=False)
-    model.add(
-        Dense(
-            layer_width,
-            activation="relu",
-            kernel_regularizer=NeuralPersistence(2, layer_width),
-        ),
-        rebuild=False,
-    )
-    for _ in range(num_layers - 1):
+    for _ in range(num_layers):
         model.add(
             Dense(
                 layer_width,
                 activation="relu",
-                kernel_regularizer=NeuralPersistence(layer_width, layer_width),
+                kernel_regularizer=NeuralPersistence(),
             ),
             rebuild=False,
         )
@@ -28,7 +20,7 @@ def build_model(num_layers, layer_width, batch_size=32, jit_compile="auto"):
         Dense(
             1,
             activation="sigmoid",
-            kernel_regularizer=NeuralPersistence(layer_width, 1),
+            kernel_regularizer=NeuralPersistence(),
         )
     )
     model.compile(
@@ -38,3 +30,13 @@ def build_model(num_layers, layer_width, batch_size=32, jit_compile="auto"):
         jit_compile=jit_compile,
     )
     return model
+
+if __name__ == "__main__":
+    from sklearn.datasets import make_moons
+
+    x, y = make_moons()
+    val_data = make_moons()
+
+    model = build_model(5, 5)
+
+    model.fit(x, y, validation_data=val_data)
