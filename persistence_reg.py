@@ -23,7 +23,7 @@ def _minimal_spanning_tree(weights, start_index=0):
     num_nodes = m + n
 
     min_weights = full((num_nodes,), inf)
-    min_weights = slice_update(min_weights, (start_index,), (0,))
+    min_weights = slice_update(min_weights, array((start_index,)), array((0.0,)))
     visited = zeros(num_nodes, dtype=bool)
     total = array(0.0)
 
@@ -34,7 +34,7 @@ def _minimal_spanning_tree(weights, start_index=0):
         i = argmin(where(visited, inf, min_weights))
 
         new_total = total + min_weights[i]
-        new_visited = slice_update(visited, (i,), (True,))
+        new_visited = slice_update(visited, array((i,)), array((True,)))
 
         def input_node():
             potential_weights = weights[i, :]
