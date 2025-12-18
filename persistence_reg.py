@@ -38,17 +38,15 @@ def _minimal_spanning_tree(weights, start_index=0):
 
         def input_node():
             potential_weights = weights[i, :]
-            idx = nonzero((potential_weights < min_weights[m:]) & (~visited[m:]))
+            mask = (potential_weights < min_weights[m:]) & (~visited[m:])
             return scatter_update(
-                min_weights, array(idx).T + m, potential_weights[idx]
+                min_weights, nonzero(mask).T + m, potential_weights[mask]
             )
 
         def output_node():
             potential_weights = weights[:, i - m]
-            idx = nonzero((potential_weights < min_weights[:m]) & (~visited[:m]))
-            return scatter_update(
-                min_weights, array(idx).T, potential_weights[idx]
-            )
+            mask = (potential_weights < min_weights[:m]) & (~visited[:m])
+            return scatter_update(min_weights, nonzero(mask).T, potential_weights[mask])
 
         new_min_weights = cond(i < m, input_node, output_node)
 
