@@ -4,56 +4,53 @@ from math import inf
 from keras import Regularizer
 from keras.ops import (
     append,
-    argmin,
+    argmax,
     array,
     cond,
     fori_loop,
-    full,
     max,
     shape,
     slice_update,
+    sum,
     where,
     zeros,
 )
 
 
-def _minimal_spanning_tree(weights, start_index=0):
+def _maximum_spanning_tree(weights):
     m, n = shape(weights)
     num_nodes = m + n
 
-    min_weights = full((num_nodes,), inf)
-    min_weights = slice_update(min_weights, array((start_index,)), array((0.0,)))
+    max_weights = array((0.0,) + (-inf,) * (num_nodes - 1))
     visited = zeros(num_nodes, dtype=bool)
-    total = array(0.0)
 
-    initial_state = min_weights, visited, total
+    initial_state = max_weights, visited
 
     def body(_, state):
-        min_weights, visited, total = state
-        i = argmin(where(visited, inf, min_weights))
+        max_weights, visited = state
+        i = argmax(where(visited, -inf, max_weights))
 
-        new_total = total + min_weights[i]
-        new_visited = slice_update(visited, array((i,)), array((True,)))
+        new_visited = slice_update(visited, (i,), array((True,)))
 
         def input_node():
             potential_weights = weights[i, :]
-            mask = (potential_weights < min_weights[m:]) & (~visited[m:])
-            update = where(mask, potential_weights, min_weights[m:])
-            return append(min_weights[:m], update)
+            do_update = (potential_weights > max_weights[m:]) & ~visited[m:]
+            update = where(do_update, potential_weights, max_weights[m:])
+            return append(max_weights[:m], update)
 
         def output_node():
             potential_weights = weights[:, i - m]
-            mask = (potential_weights < min_weights[:m]) & (~visited[:m])
-            update = where(mask, potential_weights, min_weights[:m])
-            return append(update, min_weights[m:])
+            do_update = (potential_weights > max_weights[:m]) & ~visited[:m]
+            update = where(do_update, potential_weights, max_weights[:m])
+            return append(update, max_weights[m:])
 
-        new_min_weights = cond(i < m, input_node, output_node)
+        new_max_weights = cond(i < m, input_node, output_node)
 
-        return new_min_weights, new_visited, new_total
+        return new_max_weights, new_visited
 
-    _, _, total = fori_loop(0, num_nodes, body, initial_state)
+    final_max_weights, _ = fori_loop(0, num_nodes, body, initial_state)
 
-    return total
+    return final_max_weights
 
 
 @dataclass
@@ -63,5 +60,6 @@ class NeuralPersistence(Regularizer):
 
     def __call__(self, weights):
         absolute_weights = abs(weights)
-        normalized = (1 - absolute_weights / max(absolute_weights)) ** self.norm
-        return -self.scale * _minimal_spanning_tree(normalized) ** (1 / self.norm)
+        normalized = absolute_weights / max(absolute_weights)
+        persistence = 1 - _maximum_spanning_tree(normalized)
+        return -self.scale * sum(persistence**self.norm) ** (1 / self.norm)
