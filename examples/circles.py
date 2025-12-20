@@ -49,12 +49,18 @@ def build_model(
 
 
 if __name__ == "__main__":
+    from numpy import savez
+
     from persistence_reg import NeuralPersistence
 
     from .utils import plot_history
 
-    model1, history = build_model()
+    model, history = build_model()
     plot_history(history)
+    model.save("no_reg.keras")
+    savez("no_reg", **history.history)
 
-    model2, history = build_model(kernel_regularizer=NeuralPersistence(scale=0.1))
+    model, history = build_model(kernel_regularizer=NeuralPersistence(scale=0.1))
     plot_history(history)
+    model.save("reg.keras")
+    savez("reg", **history.history)
