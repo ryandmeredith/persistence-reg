@@ -1,7 +1,7 @@
 from keras import Sequential
 from keras.layers import Dense, Input
 from keras.optimizers import Adam
-from sklearn.datasets import make_moons
+from sklearn.datasets import make_circles
 
 
 def build_model(
@@ -41,7 +41,7 @@ def build_model(
         jit_compile=jit_compile,
     )
 
-    x, y = make_moons(data_size, noise=0.05, random_state=42)
+    x, y = make_circles(data_size, noise=0.05, random_state=42)
 
     history = model.fit(x, y, batch_size, epochs, validation_split=val_split)
 
