@@ -50,7 +50,7 @@ def _maximum_spanning_tree(weights):
 
     final_max_weights, _ = fori_loop(0, num_nodes, body, initial_state)
 
-    return final_max_weights
+    return final_max_weights[1:]
 
 
 @dataclass

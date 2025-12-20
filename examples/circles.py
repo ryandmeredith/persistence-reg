@@ -5,13 +5,13 @@ from sklearn.datasets import make_circles
 
 
 def build_model(
-    num_layers,
-    layer_width,
+    num_layers=10,
+    layer_width=500,
     jit_compile="auto",
     kernel_regularizer=None,
-    learning_rate=0.001,
+    learning_rate=1e-5,
     batch_size=8,
-    epochs=100,
+    epochs=500,
     data_size=100,
     val_split=0.2,
 ):
@@ -46,3 +46,15 @@ def build_model(
     history = model.fit(x, y, batch_size, epochs, validation_split=val_split)
 
     return model, history
+
+
+if __name__ == "__main__":
+    from persistence_reg import NeuralPersistence
+
+    from .utils import plot_history
+
+    model1, history = build_model()
+    plot_history(history)
+
+    model2, history = build_model(kernel_regularizer=NeuralPersistence(scale=0.1))
+    plot_history(history)
