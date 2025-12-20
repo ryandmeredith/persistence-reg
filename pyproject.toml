@@ -15,6 +15,7 @@ dev = [
   "jax",
   "torch",
   "scikit-learn",
+  "matplotlib",
 ]
 
 [build-system]
