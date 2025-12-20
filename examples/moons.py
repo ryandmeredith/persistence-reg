@@ -12,6 +12,8 @@ def build_model(
     learning_rate=0.001,
     batch_size=32,
     epochs=100,
+    data_size=100,
+    val_split=0.2,
 ):
     model = Sequential()
     model.add(Input(batch_shape=(batch_size, 2)), rebuild=False)
@@ -39,8 +41,8 @@ def build_model(
         jit_compile=jit_compile,
     )
 
-    x, y = make_moons(noise=0.05, random_state=42)
+    x, y = make_moons(data_size, noise=0.05, random_state=42)
 
-    history = model.fit(x, y, batch_size, epochs, validation_split=0.2)
+    history = model.fit(x, y, batch_size, epochs, validation_split=val_split)
 
     return model, history
