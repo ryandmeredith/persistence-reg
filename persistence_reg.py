@@ -61,4 +61,4 @@ class NeuralPersistence(Regularizer):
         return -self.scale * sum(persistence**self.norm) ** (1 / self.norm)
 
     def get_config(self):
-        asdict(self)
+        return asdict(self)
