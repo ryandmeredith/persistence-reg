@@ -22,7 +22,7 @@ def _maximum_spanning_tree(weights):
     num_nodes = m + n
 
     max_weights = full((num_nodes,), -inf)
-    max_weights = slice_update(max_weights, (0,), array((0,)))
+    max_weights = slice_update(max_weights, (0,), array((0.0,)))
     visited_mask = zeros(num_nodes)
 
     initial_state = max_weights, visited_mask
