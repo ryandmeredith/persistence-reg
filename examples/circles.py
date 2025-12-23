@@ -37,11 +37,12 @@ def build_model(
     model.compile(
         optimizer=Adam(learning_rate),
         loss="binary_crossentropy",
-        metrics=["accuracy"],
+        metrics=["accuracy", "binary_crossentropy"],
         jit_compile=jit_compile,
     )
 
     x, y = make_circles(data_size, noise=0.05, random_state=42)
+    y = y[:, None]
 
     history = model.fit(x, y, batch_size, epochs, validation_split=val_split)
 
